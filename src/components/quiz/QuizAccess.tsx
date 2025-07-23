@@ -93,7 +93,7 @@ export const QuizAccess = () => {
       return;
     }
 
-    // Check time window
+      // Check time window
     const now = new Date();
     if (quiz.start_time && new Date(quiz.start_time) > now) {
       toast({
@@ -103,8 +103,7 @@ export const QuizAccess = () => {
       });
       return;
     }
-
-    if (quiz.end_time && new Date(quiz.end_time) < now) {
+       if (quiz.end_time && new Date(quiz.end_time) < now) {
       toast({
         title: "Quiz Expired",
         description: `Quiz was available until ${new Date(quiz.end_time).toLocaleString()}`,
@@ -112,7 +111,6 @@ export const QuizAccess = () => {
       });
       return;
     }
-
     // Check if already attempted
     if (existingAttempt) {
       toast({
@@ -188,15 +186,7 @@ export const QuizAccess = () => {
     (!quiz.start_time || new Date(quiz.start_time) <= now) &&
     (!quiz.end_time || new Date(quiz.end_time) > now);
 
-  const getStatusInfo = () => {
-    if (!quiz.is_active) {
-      return { 
-        status: 'inactive', 
-        message: 'This quiz is not currently active',
-        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />
-      };
-    }
-    
+const getStatusInfo = () => {
     if (quiz.start_time && new Date(quiz.start_time) > now) {
       return { 
         status: 'scheduled', 
@@ -229,7 +219,8 @@ export const QuizAccess = () => {
   };
 
   const statusInfo = getStatusInfo();
-  const canStart = isAvailable && !existingAttempt;
+  const canStart = (!quiz.start_time || new Date(quiz.start_time) <= now) &&
+    (!quiz.end_time || new Date(quiz.end_time) > now) && !existingAttempt;
 
   return (
     <div className="min-h-screen bg-gray-50">
