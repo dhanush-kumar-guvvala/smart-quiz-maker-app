@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,18 @@ import { QuizResults } from './QuizResults';
 import { UsernameSetup } from './UsernameSetup';
 import { BookOpen, Clock, Trophy, LogOut, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  topic: string;
+  total_questions: number;
+  duration_minutes: number;
+  quiz_code: string;
+  start_time: string | null;
+  end_time: string | null;
+}
 
 interface QuizAttempt {
   id: string;
@@ -34,6 +45,7 @@ export const StudentDashboard = () => {
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
+  const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchAttempts = async () => {
@@ -53,7 +65,6 @@ export const StudentDashboard = () => {
 
       if (error) throw error;
 
-      // Transform the data
       const formattedAttempts = data.map(attempt => ({
         ...attempt,
         quiz: {
@@ -74,9 +85,29 @@ export const StudentDashboard = () => {
     }
   };
 
+  const fetchAvailableQuizzes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('quizzes')
+        .select('*')
+        .eq('is_active', true);
+
+      if (error) throw error;
+      setAvailableQuizzes(data);
+    } catch (error) {
+      console.error('Error fetching available quizzes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch available quizzes",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (profile?.id) {
       fetchAttempts();
+      fetchAvailableQuizzes();
     }
   }, [profile?.id]);
 
@@ -93,7 +124,6 @@ export const StudentDashboard = () => {
     setLoading(true);
 
     try {
-      // Check if quiz exists and is active
       const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
         .select('*')
@@ -110,7 +140,6 @@ export const StudentDashboard = () => {
         return;
       }
 
-      // Check if quiz is within the allowed time window
       const now = new Date();
       if (quiz.start_time && new Date(quiz.start_time) > now) {
         toast({
@@ -130,8 +159,7 @@ export const StudentDashboard = () => {
         return;
       }
 
-      // Check if student has already attempted this quiz
-      const { data: existingAttempt, error: attemptError } = await supabase
+      const { data: existingAttempt } = await supabase
         .from('quiz_attempts')
         .select('*')
         .eq('quiz_id', quiz.id)
@@ -172,7 +200,6 @@ export const StudentDashboard = () => {
     const attempt = attempts.find(a => a.id === attemptId);
     if (!attempt) return;
 
-    // Check if 1 hour has passed since completion
     const completedAt = new Date(attempt.completed_at);
     const now = new Date();
     const hoursPassed = (now.getTime() - completedAt.getTime()) / (1000 * 60 * 60);
@@ -191,7 +218,6 @@ export const StudentDashboard = () => {
     setActiveView('results');
   };
 
-  // Show username setup if student doesn't have a username
   if (profile && !profile.username) {
     return <UsernameSetup onComplete={() => {}} />;
   }
@@ -244,7 +270,6 @@ export const StudentDashboard = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Join Quiz Section */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Join a Quiz</CardTitle>
@@ -253,7 +278,7 @@ export const StudentDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex-1">
                 <Label htmlFor="quizCode" className="sr-only">Quiz Code</Label>
                 <Input
@@ -264,7 +289,7 @@ export const StudentDashboard = () => {
                   maxLength={6}
                 />
               </div>
-              <Button onClick={handleJoinQuiz} disabled={loading}>
+              <Button onClick={handleJoinQuiz} disabled={loading} className="w-full sm:w-auto">
                 {loading ? "Joining..." : (
                   <>
                     <Search className="h-4 w-4 mr-2" />
@@ -276,7 +301,41 @@ export const StudentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Statistics */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Available Quizzes</CardTitle>
+            <CardDescription>
+              Quizzes that are currently active and available for you to take.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {availableQuizzes.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-lg font-medium">No quizzes available at the moment.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {availableQuizzes.map((quiz) => (
+                  <div key={quiz.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <div className="mb-4 sm:mb-0">
+                      <h3 className="text-lg font-semibold">{quiz.title}</h3>
+                      <p className="text-sm text-gray-500">{quiz.description}</p>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 mt-2">
+                        <span>{quiz.total_questions} questions</span>
+                        <span>{quiz.duration_minutes} minutes</span>
+                        <Badge variant="outline">{quiz.topic}</Badge>
+                      </div>
+                    </div>
+                    <Button onClick={() => setQuizCode(quiz.quiz_code)} className="w-full sm:w-auto">
+                      Join with code: {quiz.quiz_code}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -313,7 +372,6 @@ export const StudentDashboard = () => {
           </Card>
         </div>
 
-        {/* Quiz History */}
         <Card>
           <CardHeader>
             <CardTitle>Quiz History</CardTitle>
@@ -332,8 +390,8 @@ export const StudentDashboard = () => {
               <div className="space-y-4">
                 {attempts.map((attempt) => (
                   <div key={attempt.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row justify-between items-start">
+                      <div className="flex-1 mb-4 sm:mb-0">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-lg font-semibold">{attempt.quiz.title}</h3>
                           <Badge variant="outline" className="font-mono">
@@ -360,6 +418,7 @@ export const StudentDashboard = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => viewResults(attempt.id)}
+                          className="w-full sm:w-auto"
                         >
                           View Results
                         </Button>
