@@ -178,8 +178,8 @@ Make sure the questions are educational, accurate, and appropriate for the topic
           topic,
           total_questions: generatedQuestions.length,
           duration_minutes: durationMinutes,
-          start_time: startTime ? new Date(startTime).toISOString() : null,
-          end_time: endTime ? new Date(endTime).toISOString() : null,
+          start_time: startTime ? `${startTime}:00+05:30` : null,
+          end_time: endTime ? `${endTime}:00+05:30` : null,
           is_active: false,
           teacher_id: user.id,
         })
