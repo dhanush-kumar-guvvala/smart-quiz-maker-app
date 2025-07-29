@@ -80,6 +80,12 @@ export const QuizAccess = () => {
     }
   };
 
+  const formatToIST = (dateString: string | null) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+  };
+
   const handleStartQuiz = async () => {
     if (!quiz || !profile?.id) return;
 
@@ -98,7 +104,7 @@ export const QuizAccess = () => {
     if (quiz.start_time && new Date(quiz.start_time) > now) {
       toast({
         title: "Quiz Not Available",
-        description: `Quiz will be available from ${new Date(quiz.start_time).toLocaleString()}`,
+        description: `Quiz will be available from ${formatToIST(quiz.start_time)}`,
         variant: "destructive",
       });
       return;
@@ -106,7 +112,7 @@ export const QuizAccess = () => {
        if (quiz.end_time && new Date(quiz.end_time) < now) {
       toast({
         title: "Quiz Expired",
-        description: `Quiz was available until ${new Date(quiz.end_time).toLocaleString()}`,
+        description: `Quiz was available until ${formatToIST(quiz.end_time)}`,
         variant: "destructive",
       });
       return;
@@ -190,7 +196,7 @@ const getStatusInfo = () => {
     if (quiz.start_time && new Date(quiz.start_time) > now) {
       return { 
         status: 'scheduled', 
-        message: `Available from ${new Date(quiz.start_time).toLocaleString()}`,
+        message: `Available from ${formatToIST(quiz.start_time)}`,
         icon: <Clock className="h-5 w-5 text-blue-500" />
       };
     }
@@ -198,7 +204,7 @@ const getStatusInfo = () => {
     if (quiz.end_time && new Date(quiz.end_time) < now) {
       return { 
         status: 'expired', 
-        message: `Expired on ${new Date(quiz.end_time).toLocaleString()}`,
+        message: `Expired on ${formatToIST(quiz.end_time)}`,
         icon: <AlertCircle className="h-5 w-5 text-red-500" />
       };
     }
@@ -294,10 +300,10 @@ const getStatusInfo = () => {
                 <h4 className="font-medium text-blue-900 mb-2">Quiz Schedule</h4>
                 <div className="space-y-1 text-sm text-blue-700">
                   {quiz.start_time && (
-                    <p>Starts: {new Date(quiz.start_time).toLocaleString()}</p>
+                    <p>Starts: {formatToIST(quiz.start_time)}</p>
                   )}
                   {quiz.end_time && (
-                    <p>Ends: {new Date(quiz.end_time).toLocaleString()}</p>
+                    <p>Ends: {formatToIST(quiz.end_time)}</p>
                   )}
                 </div>
               </div>
