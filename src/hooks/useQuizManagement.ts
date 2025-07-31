@@ -148,12 +148,20 @@ export const useQuizManagement = (userId?: string) => {
   // Toggle quiz status
   const toggleQuizStatus = async (quizId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('quizzes')
         .update({ is_active: !currentStatus })
-        .eq('id', quizId);
+        .eq('id', quizId)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+          console.error('Supabase error:', error);
+          throw error;
+      }
+
+      if (!data || data.length === 0) {
+          throw new Error("Quiz not found or user does not have permission to update.");
+      }
 
       toast({
         title: "Success",
@@ -162,11 +170,11 @@ export const useQuizManagement = (userId?: string) => {
 
       await fetchQuizzes();
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating quiz status:', err);
       toast({
         title: "Error",
-        description: "Failed to update quiz status",
+        description: err.message || "Failed to update quiz status",
         variant: "destructive",
       });
       return false;
