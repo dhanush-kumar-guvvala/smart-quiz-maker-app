@@ -1,106 +1,24 @@
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QuizCreation } from './QuizCreation';
 import { QuizAnalytics } from './QuizAnalytics';
 import { Plus, BookOpen, Users, BarChart3, LogOut } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-
-interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  topic: string;
-  total_questions: number;
-  duration_minutes: number;
-  quiz_code: string;
-  created_at: string;
-  _count?: {
-    quiz_attempts: number;
-  };
-}
+import { useQuizManagement } from '@/hooks/useQuizManagement';
 
 export const TeacherDashboard = () => {
   const { profile, signOut } = useAuth();
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const { quizzes, loading, fetchQuizzes, deleteQuiz, toggleQuizStatus } = useQuizManagement(profile?.id);
   const [activeView, setActiveView] = useState<'dashboard' | 'create' | 'analytics'>('dashboard');
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchQuizzes = async () => {
-    if (!profile) return;
-    try {
-      const { data, error } = await supabase
-        .from('quizzes')
-        .select(`
-          *,
-          quiz_attempts(count)
-        `)
-        .eq('teacher_id', profile.id) // Filter quizzes by the current teacher's ID
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform the data to include attempt count
-      const quizzesWithCount = data.map(quiz => ({
-        ...quiz,
-        _count: {
-          quiz_attempts: quiz.quiz_attempts?.length || 0
-        }
-      }));
-
-      setQuizzes(quizzesWithCount);
-    } catch (error) {
-      console.error('Error fetching quizzes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch quizzes",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchQuizzes();
-  }, [profile]);
-
-  const deleteQuiz = async (quizId: string) => {
-    if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('quizzes')
-        .delete()
-        .eq('id', quizId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Quiz deleted successfully",
-      });
-
+    if (profile) {
       fetchQuizzes();
-    } catch (error) {
-      console.error('Error deleting quiz:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete quiz",
-        variant: "destructive",
-      });
     }
-  };
+  }, [profile]);
 
   if (activeView === 'create') {
     return (
@@ -171,7 +89,7 @@ export const TeacherDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {quizzes.length}
+                {quizzes.filter(q => q.is_active).length}
               </div>
             </CardContent>
           </Card>
@@ -217,26 +135,10 @@ export const TeacherDashboard = () => {
                       <div className="flex-1 mb-4 md:mb-0">
                          <div className="flex items-center space-x-3 mb-2">
                            <h3 className="text-lg font-semibold">{quiz.title}</h3>
+                           <Badge variant={quiz.is_active ? 'default' : 'secondary'}>
+                             {quiz.is_active ? 'Active' : 'Inactive'}
+                           </Badge>
                          </div>
-                         <div className="flex items-center space-x-2 mb-2">
-                           <span className="text-sm font-medium text-gray-700">Quiz Code:</span>
-                            <Badge 
-                              variant="outline" 
-                              className="font-mono text-lg px-3 py-1 bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100 cursor-pointer"
-                              onClick={() => {
-                                if (quiz.quiz_code) {
-                                  navigator.clipboard.writeText(quiz.quiz_code);
-                                  toast({
-                                    title: "Copied!",
-                                    description: `Quiz code ${quiz.quiz_code} copied to clipboard`,
-                                  });
-                                }
-                              }}
-                            >
-                              {quiz.quiz_code || 'Loading...'}
-                            </Badge>
-                            <span className="text-xs text-gray-500">(Click to copy)</span>
-                           </div>
                          <p className="text-gray-600 mb-2">{quiz.description}</p>
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <span>{quiz.total_questions} questions</span>
@@ -245,6 +147,13 @@ export const TeacherDashboard = () => {
                         </div>
                       </div>
                        <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+                         <Button
+                           size="sm"
+                           onClick={() => toggleQuizStatus(quiz.id, quiz.is_active)}
+                           className="w-full md:w-auto"
+                         >
+                           {quiz.is_active ? 'Deactivate' : 'Activate'}
+                         </Button>
                          <Button
                            size="sm"
                            variant="outline"
