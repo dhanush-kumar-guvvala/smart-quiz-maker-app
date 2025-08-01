@@ -10,7 +10,7 @@ import { useQuizManagement } from '@/hooks/useQuizManagement';
 
 export const TeacherDashboard = () => {
   const { profile, signOut } = useAuth();
-  const { quizzes, loading, fetchQuizzes, deleteQuiz, toggleQuizStatus } = useQuizManagement(profile?.id);
+  const { quizzes, loading, fetchQuizzes, deleteQuiz, checkQuizStatus } = useQuizManagement(profile?.id);
   const [activeView, setActiveView] = useState<'dashboard' | 'create' | 'analytics'>('dashboard');
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
 
@@ -82,17 +82,17 @@ export const TeacherDashboard = () => {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Quizzes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {quizzes.filter(q => q.is_active).length}
-              </div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Quizzes</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {quizzes.filter(q => checkQuizStatus(q)).length}
+                </div>
+              </CardContent>
+            </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -135,8 +135,8 @@ export const TeacherDashboard = () => {
                       <div className="flex-1 mb-4 md:mb-0">
                          <div className="flex items-center space-x-3 mb-2">
                            <h3 className="text-lg font-semibold">{quiz.title}</h3>
-                           <Badge variant={quiz.is_active ? 'default' : 'secondary'}>
-                             {quiz.is_active ? 'Active' : 'Inactive'}
+                           <Badge variant={checkQuizStatus(quiz) ? 'default' : 'secondary'}>
+                             {checkQuizStatus(quiz) ? 'Active' : 'Inactive'}
                            </Badge>
                          </div>
                          <p className="text-gray-600 mb-2">{quiz.description}</p>
@@ -147,13 +147,9 @@ export const TeacherDashboard = () => {
                         </div>
                       </div>
                        <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
-                         <Button
-                           size="sm"
-                           onClick={() => toggleQuizStatus(quiz.id, quiz.is_active)}
-                           className="w-full md:w-auto"
-                         >
-                           {quiz.is_active ? 'Deactivate' : 'Activate'}
-                         </Button>
+                         <div className="text-sm text-gray-500 md:mr-4">
+                           Status: {checkQuizStatus(quiz) ? 'Currently Active' : 'Inactive'}
+                         </div>
                          <Button
                            size="sm"
                            variant="outline"

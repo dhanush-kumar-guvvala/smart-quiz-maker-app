@@ -180,7 +180,6 @@ Make sure the questions are educational, accurate, and appropriate for the topic
           duration_minutes: durationMinutes,
           start_time: startTime,
           end_time: endTime,
-          is_active: false,
           teacher_id: user.id,
         })
         .select()
