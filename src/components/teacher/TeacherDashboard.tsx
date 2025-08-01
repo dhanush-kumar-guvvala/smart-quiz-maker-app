@@ -10,7 +10,7 @@ import { useQuizManagement } from '@/hooks/useQuizManagement';
 
 export const TeacherDashboard = () => {
   const { profile, signOut } = useAuth();
-  const { quizzes, loading, fetchQuizzes, deleteQuiz, checkQuizStatus } = useQuizManagement(profile?.id);
+  const { quizzes, loading, fetchQuizzes, deleteQuiz, toggleQuizStatus } = useQuizManagement(profile?.id);
   const [activeView, setActiveView] = useState<'dashboard' | 'create' | 'analytics'>('dashboard');
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
 
@@ -89,7 +89,7 @@ export const TeacherDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {quizzes.filter(q => checkQuizStatus(q)).length}
+                  {quizzes.filter(q => q.is_active).length}
                 </div>
               </CardContent>
             </Card>
@@ -133,44 +133,49 @@ export const TeacherDashboard = () => {
                   <div key={quiz.id} className="border rounded-lg p-4">
                     <div className="flex flex-col md:flex-row justify-between items-start">
                       <div className="flex-1 mb-4 md:mb-0">
-                         <div className="flex items-center space-x-3 mb-2">
-                           <h3 className="text-lg font-semibold">{quiz.title}</h3>
-                           <Badge variant={checkQuizStatus(quiz) ? 'default' : 'secondary'}>
-                             {checkQuizStatus(quiz) ? 'Active' : 'Inactive'}
-                           </Badge>
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h3 className="text-lg font-semibold">{quiz.title}</h3>
+                            <Badge variant={quiz.is_active ? 'default' : 'secondary'}>
+                              {quiz.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                          <p className="text-gray-600 mb-2">{quiz.description}</p>
+                         <div className="flex items-center space-x-4 text-sm text-gray-500">
+                           <span>{quiz.total_questions} questions</span>
+                           <span>{quiz.duration_minutes} minutes</span>
+                           <span>{quiz._count?.quiz_attempts || 0} attempts</span>
                          </div>
-                         <p className="text-gray-600 mb-2">{quiz.description}</p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <span>{quiz.total_questions} questions</span>
-                          <span>{quiz.duration_minutes} minutes</span>
-                          <span>{quiz._count?.quiz_attempts || 0} attempts</span>
-                        </div>
-                      </div>
-                       <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
-                         <div className="text-sm text-gray-500 md:mr-4">
-                           Status: {checkQuizStatus(quiz) ? 'Currently Active' : 'Inactive'}
-                         </div>
-                         <Button
-                           size="sm"
-                           variant="outline"
-                           onClick={() => {
-                             setSelectedQuizId(quiz.id);
-                             setActiveView('analytics');
-                           }}
-                           className="w-full md:w-auto"
-                         >
-                           <BarChart3 className="h-4 w-4 mr-1" />
-                           Analytics
-                         </Button>
-                         <Button
-                           size="sm"
-                           variant="destructive"
-                           onClick={() => deleteQuiz(quiz.id)}
-                           className="w-full md:w-auto"
-                         >
-                           Delete
-                         </Button>
                        </div>
+                        <div className="flex flex-col md:flex-row items-stretch md:items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+                          <Button
+                            size="sm"
+                            variant={quiz.is_active ? "secondary" : "default"}
+                            onClick={() => toggleQuizStatus(quiz.id, quiz.is_active)}
+                            className="w-full md:w-auto"
+                          >
+                            {quiz.is_active ? 'Deactivate' : 'Activate'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedQuizId(quiz.id);
+                              setActiveView('analytics');
+                            }}
+                            className="w-full md:w-auto"
+                          >
+                            <BarChart3 className="h-4 w-4 mr-1" />
+                            Analytics
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteQuiz(quiz.id)}
+                            className="w-full md:w-auto"
+                          >
+                            Delete
+                          </Button>
+                        </div>
                     </div>
                   </div>
                 ))}

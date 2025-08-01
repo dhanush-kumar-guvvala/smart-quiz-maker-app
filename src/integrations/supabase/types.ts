@@ -260,10 +260,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      update_specific_quiz_active_status: {
-        Args: { quiz_id: number }
-        Returns: undefined
-      }
     }
     Enums: {
       difficulty_level: "easy" | "medium" | "hard"

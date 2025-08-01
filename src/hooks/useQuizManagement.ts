@@ -145,13 +145,36 @@ export const useQuizManagement = (userId?: string) => {
     }
   };
 
-  // Check and update quiz status based on current time
-  const checkQuizStatus = (quiz: Quiz): boolean => {
-    const now = new Date();
-    const startTime = quiz.start_time ? new Date(quiz.start_time) : null;
-    const endTime = quiz.end_time ? new Date(quiz.end_time) : null;
-    
-    return !!(startTime && endTime && now >= startTime && now <= endTime);
+
+  // Toggle quiz status
+  const toggleQuizStatus = async (quizId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('quizzes')
+        .update({ is_active: !currentStatus })
+        .eq('id', quizId);
+
+      if (error) throw error;
+
+      // Update local state
+      setQuizzes(prev => prev.map(quiz => 
+        quiz.id === quizId 
+          ? { ...quiz, is_active: !currentStatus }
+          : quiz
+      ));
+
+      toast({
+        title: "Success",
+        description: `Quiz ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+    } catch (error) {
+      console.error('Error toggling quiz status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update quiz status",
+        variant: "destructive",
+      });
+    }
   };
 
   // Delete quiz
@@ -275,12 +298,12 @@ export const useQuizManagement = (userId?: string) => {
     fetchAttempts,
     getQuizByCode,
     deleteQuiz,
+    toggleQuizStatus,
     joinQuizByCode,
     subscribeToQuizUpdates,
-    checkQuizStatus,
     
     // Computed values
-    activeQuizzes: quizzes.filter(q => checkQuizStatus(q)),
+    activeQuizzes: quizzes.filter(q => q.is_active),
     totalAttempts: quizzes.reduce((sum, quiz) => sum + (quiz._count?.quiz_attempts || 0), 0),
     completedAttempts: attempts.filter(a => a.is_completed),
     averageScore: attempts.length > 0 
