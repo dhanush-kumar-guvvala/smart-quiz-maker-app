@@ -147,14 +147,14 @@ export type Database = {
       }
       quizzes: {
         Row: {
-          created_at: string | null
+          created_at: string
           description: string | null
           duration_minutes: number
-          end_time: string | null
+          end_time: string
           id: string
           is_active: boolean | null
-          quiz_code: string
-          start_time: string | null
+          quiz_code: string | null
+          start_time: string
           teacher_id: string
           title: string
           topic: string | null
@@ -162,14 +162,14 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           duration_minutes?: number
-          end_time?: string | null
+          end_time?: string
           id?: string
           is_active?: boolean | null
-          quiz_code: string
-          start_time?: string | null
+          quiz_code?: string | null
+          start_time?: string
           teacher_id: string
           title: string
           topic?: string | null
@@ -177,14 +177,14 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           duration_minutes?: number
-          end_time?: string | null
+          end_time?: string
           id?: string
           is_active?: boolean | null
-          quiz_code?: string
-          start_time?: string | null
+          quiz_code?: string | null
+          start_time?: string
           teacher_id?: string
           title?: string
           topic?: string | null
@@ -248,9 +248,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      convert_quizzes_to_ist: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      convert_to_ist: {
+        Args: { "": string } | { "": string }
+        Returns: string
+      }
       generate_quiz_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      update_specific_quiz_active_status: {
+        Args: { quiz_id: number }
+        Returns: undefined
       }
     }
     Enums: {
