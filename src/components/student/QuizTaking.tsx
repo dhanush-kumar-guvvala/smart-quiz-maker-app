@@ -77,12 +77,17 @@ export const QuizTaking: React.FC<QuizTakingProps> = ({ quizId, onBack, onComple
         options: q.options ? JSON.parse(q.options as string) : null
       }));
 
+      // Check if user is authenticated
+      if (!profile?.id) {
+        throw new Error('User not authenticated');
+      }
+
       // Create quiz attempt
       const { data: attempt, error: attemptError } = await supabase
         .from('quiz_attempts')
         .insert({
           quiz_id: quizId,
-          student_id: profile?.id,
+          student_id: profile.id,
           total_questions: questionsData.length,
           started_at: new Date().toISOString(),
         })
