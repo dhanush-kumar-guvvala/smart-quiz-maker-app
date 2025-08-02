@@ -86,6 +86,13 @@ export const QuizAccess = () => {
     return date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
   };
 
+  const convertToIST = (date: Date) => {
+    // Convert to IST by adding 5:30 hours to UTC
+    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const istTime = new Date(utcTime + (5.5 * 3600000));
+    return istTime;
+  };
+
   const handleStartQuiz = async () => {
     if (!quiz || !profile?.id) return;
 
@@ -101,13 +108,11 @@ export const QuizAccess = () => {
 
     // Get current time in IST for comparison
     const now = new Date();
-    const istNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
     
     if (quiz.start_time) {
       const startTime = new Date(quiz.start_time);
-      const istStartTime = new Date(startTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
       
-      if (istStartTime > istNow) {
+      if (startTime > now) {
         toast({
           title: "Quiz Not Available",
           description: `Quiz will be available from ${formatToIST(quiz.start_time)}`,
@@ -119,9 +124,8 @@ export const QuizAccess = () => {
     
     if (quiz.end_time) {
       const endTime = new Date(quiz.end_time);
-      const istEndTime = new Date(endTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
       
-      if (istEndTime < istNow) {
+      if (endTime < now) {
         toast({
           title: "Quiz Expired",
           description: `Quiz was available until ${formatToIST(quiz.end_time)}`,
@@ -201,16 +205,15 @@ export const QuizAccess = () => {
   }
 
   const now = new Date();
-  const istNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
   
   const isAvailable = quiz.is_active &&
-    (!quiz.start_time || new Date(new Date(quiz.start_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) <= istNow) &&
-    (!quiz.end_time || new Date(new Date(quiz.end_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) > istNow);
+    (!quiz.start_time || new Date(quiz.start_time) <= now) &&
+    (!quiz.end_time || new Date(quiz.end_time) > now);
 
 const getStatusInfo = () => {
     if (quiz.start_time) {
-      const istStartTime = new Date(new Date(quiz.start_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-      if (istStartTime > istNow) {
+      const startTime = new Date(quiz.start_time);
+      if (startTime > now) {
         return { 
           status: 'scheduled', 
           message: `Available from ${formatToIST(quiz.start_time)}`,
@@ -220,8 +223,8 @@ const getStatusInfo = () => {
     }
     
     if (quiz.end_time) {
-      const istEndTime = new Date(new Date(quiz.end_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-      if (istEndTime < istNow) {
+      const endTime = new Date(quiz.end_time);
+      if (endTime < now) {
         return { 
           status: 'expired', 
           message: `Expired on ${formatToIST(quiz.end_time)}`,
@@ -246,8 +249,8 @@ const getStatusInfo = () => {
   };
 
   const statusInfo = getStatusInfo();
-  const canStart = (!quiz.start_time || new Date(new Date(quiz.start_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) <= istNow) &&
-    (!quiz.end_time || new Date(new Date(quiz.end_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) > istNow) && !existingAttempt;
+  const canStart = (!quiz.start_time || new Date(quiz.start_time) <= now) &&
+    (!quiz.end_time || new Date(quiz.end_time) > now) && !existingAttempt;
 
   return (
     <div className="min-h-screen bg-gray-50">
