@@ -21,6 +21,7 @@ export type Database = {
           full_name: string
           id: string
           role: Database["public"]["Enums"]["user_role"]
+          timezone: string | null
           updated_at: string | null
           username: string | null
         }
@@ -30,6 +31,7 @@ export type Database = {
           full_name: string
           id: string
           role?: Database["public"]["Enums"]["user_role"]
+          timezone?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -39,6 +41,7 @@ export type Database = {
           full_name?: string
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
+          timezone?: string | null
           updated_at?: string | null
           username?: string | null
         }

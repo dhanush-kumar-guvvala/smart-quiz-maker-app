@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Users, BookOpen, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface Quiz {
   id: string;
@@ -80,10 +81,15 @@ export const QuizAccess = () => {
     }
   };
 
-  const formatToIST = (dateString: string | null) => {
+  // Get user's timezone, default to Asia/Kolkata
+  const getUserTimezone = () => {
+    return profile?.timezone || 'Asia/Kolkata';
+  };
+
+  const formatToUserTimezone = (dateString: string | null) => {
     if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+    const userTimezone = getUserTimezone();
+    return formatInTimeZone(new Date(dateString), userTimezone, 'PPPp');
   };
 
   const handleStartQuiz = async () => {
@@ -108,7 +114,7 @@ export const QuizAccess = () => {
       if (startTime > now) {
         toast({
           title: "Quiz Not Available",
-          description: `Quiz will be available from ${formatToIST(quiz.start_time)}`,
+          description: `Quiz will be available from ${formatToUserTimezone(quiz.start_time)}`,
           variant: "destructive",
         });
         return;
@@ -121,7 +127,7 @@ export const QuizAccess = () => {
       if (endTime < now) {
         toast({
           title: "Quiz Expired",
-          description: `Quiz was available until ${formatToIST(quiz.end_time)}`,
+          description: `Quiz was available until ${formatToUserTimezone(quiz.end_time)}`,
           variant: "destructive",
         });
         return;
@@ -209,7 +215,7 @@ const getStatusInfo = () => {
       if (startTime > now) {
         return { 
           status: 'scheduled', 
-          message: `Available from ${formatToIST(quiz.start_time)}`,
+          message: `Available from ${formatToUserTimezone(quiz.start_time)}`,
           icon: <Clock className="h-5 w-5 text-blue-500" />
         };
       }
@@ -220,7 +226,7 @@ const getStatusInfo = () => {
       if (endTime < now) {
         return { 
           status: 'expired', 
-          message: `Expired on ${formatToIST(quiz.end_time)}`,
+          message: `Expired on ${formatToUserTimezone(quiz.end_time)}`,
           icon: <AlertCircle className="h-5 w-5 text-red-500" />
         };
       }
@@ -317,10 +323,10 @@ const getStatusInfo = () => {
                 <h4 className="font-medium text-blue-900 mb-2">Quiz Schedule</h4>
                 <div className="space-y-1 text-sm text-blue-700">
                   {quiz.start_time && (
-                    <p>Starts: {formatToIST(quiz.start_time)}</p>
+                    <p>Starts: {formatToUserTimezone(quiz.start_time)}</p>
                   )}
                   {quiz.end_time && (
-                    <p>Ends: {formatToIST(quiz.end_time)}</p>
+                    <p>Ends: {formatToUserTimezone(quiz.end_time)}</p>
                   )}
                 </div>
               </div>
