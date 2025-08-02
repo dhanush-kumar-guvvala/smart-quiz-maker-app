@@ -86,13 +86,6 @@ export const QuizAccess = () => {
     return date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
   };
 
-  const convertToIST = (date: Date) => {
-    // Convert to IST by adding 5:30 hours to UTC
-    const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-    const istTime = new Date(utcTime + (5.5 * 3600000));
-    return istTime;
-  };
-
   const handleStartQuiz = async () => {
     if (!quiz || !profile?.id) return;
 
