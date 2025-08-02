@@ -63,10 +63,17 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
       const { data: attempts, error: attemptsError } = await supabase
         .from('quiz_attempts')
         .select(`
-          username,
+          id,
+          student_id,
           score,
           completed_at,
           time_taken_minutes,
+          username,
+          profiles!quiz_attempts_student_id_fkey (
+            id,
+            full_name,
+            email
+          )
         `)
         .eq('quiz_id', quizId)
         .eq('is_completed', true);
