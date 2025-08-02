@@ -99,23 +99,36 @@ export const QuizAccess = () => {
       return;
     }
 
-      // Check time window
+    // Get current time in IST for comparison
     const now = new Date();
-    if (quiz.start_time && new Date(quiz.start_time) > now) {
-      toast({
-        title: "Quiz Not Available",
-        description: `Quiz will be available from ${formatToIST(quiz.start_time)}`,
-        variant: "destructive",
-      });
-      return;
+    const istNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    
+    if (quiz.start_time) {
+      const startTime = new Date(quiz.start_time);
+      const istStartTime = new Date(startTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      
+      if (istStartTime > istNow) {
+        toast({
+          title: "Quiz Not Available",
+          description: `Quiz will be available from ${formatToIST(quiz.start_time)}`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
-       if (quiz.end_time && new Date(quiz.end_time) < now) {
-      toast({
-        title: "Quiz Expired",
-        description: `Quiz was available until ${formatToIST(quiz.end_time)}`,
-        variant: "destructive",
-      });
-      return;
+    
+    if (quiz.end_time) {
+      const endTime = new Date(quiz.end_time);
+      const istEndTime = new Date(endTime.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      
+      if (istEndTime < istNow) {
+        toast({
+          title: "Quiz Expired",
+          description: `Quiz was available until ${formatToIST(quiz.end_time)}`,
+          variant: "destructive",
+        });
+        return;
+      }
     }
     // Check if already attempted
     if (existingAttempt) {
@@ -188,25 +201,33 @@ export const QuizAccess = () => {
   }
 
   const now = new Date();
+  const istNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  
   const isAvailable = quiz.is_active &&
-    (!quiz.start_time || new Date(quiz.start_time) <= now) &&
-    (!quiz.end_time || new Date(quiz.end_time) > now);
+    (!quiz.start_time || new Date(new Date(quiz.start_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) <= istNow) &&
+    (!quiz.end_time || new Date(new Date(quiz.end_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) > istNow);
 
 const getStatusInfo = () => {
-    if (quiz.start_time && new Date(quiz.start_time) > now) {
-      return { 
-        status: 'scheduled', 
-        message: `Available from ${formatToIST(quiz.start_time)}`,
-        icon: <Clock className="h-5 w-5 text-blue-500" />
-      };
+    if (quiz.start_time) {
+      const istStartTime = new Date(new Date(quiz.start_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      if (istStartTime > istNow) {
+        return { 
+          status: 'scheduled', 
+          message: `Available from ${formatToIST(quiz.start_time)}`,
+          icon: <Clock className="h-5 w-5 text-blue-500" />
+        };
+      }
     }
     
-    if (quiz.end_time && new Date(quiz.end_time) < now) {
-      return { 
-        status: 'expired', 
-        message: `Expired on ${formatToIST(quiz.end_time)}`,
-        icon: <AlertCircle className="h-5 w-5 text-red-500" />
-      };
+    if (quiz.end_time) {
+      const istEndTime = new Date(new Date(quiz.end_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      if (istEndTime < istNow) {
+        return { 
+          status: 'expired', 
+          message: `Expired on ${formatToIST(quiz.end_time)}`,
+          icon: <AlertCircle className="h-5 w-5 text-red-500" />
+        };
+      }
     }
     
     if (existingAttempt) {
@@ -225,8 +246,8 @@ const getStatusInfo = () => {
   };
 
   const statusInfo = getStatusInfo();
-  const canStart = (!quiz.start_time || new Date(quiz.start_time) <= now) &&
-    (!quiz.end_time || new Date(quiz.end_time) > now) && !existingAttempt;
+  const canStart = (!quiz.start_time || new Date(new Date(quiz.start_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) <= istNow) &&
+    (!quiz.end_time || new Date(new Date(quiz.end_time).toLocaleString("en-US", { timeZone: "Asia/Kolkata" })) > istNow) && !existingAttempt;
 
   return (
     <div className="min-h-screen bg-gray-50">
