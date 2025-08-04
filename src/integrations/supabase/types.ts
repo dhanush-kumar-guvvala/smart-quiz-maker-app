@@ -106,6 +106,7 @@ export type Database = {
           student_id: string
           time_taken_minutes: number | null
           total_questions: number
+          username: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -118,6 +119,7 @@ export type Database = {
           student_id: string
           time_taken_minutes?: number | null
           total_questions: number
+          username?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -130,6 +132,7 @@ export type Database = {
           student_id?: string
           time_taken_minutes?: number | null
           total_questions?: number
+          username?: string | null
         }
         Relationships: [
           {
@@ -262,6 +265,10 @@ export type Database = {
       generate_quiz_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      update_quiz_attempts_username: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
