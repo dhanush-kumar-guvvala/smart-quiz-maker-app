@@ -20,14 +20,8 @@ interface AnalyticsData {
     duration_minutes: number;
   };
   attempts: Array<{
-    id: string;
     student_id: string;
-    student: {
-      id: string;
-      username: string | null;
-      full_name: string;
-      email: string;
-    };
+    username: string | null;
     score: number;
     completed_at: string;
     time_taken_minutes: number;
@@ -59,21 +53,15 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
 
       if (quizError) throw quizError;
 
-      // Fetch quiz attempts with student details
+      // Fetch quiz attempts with username
       const { data: attempts, error: attemptsError } = await supabase
         .from('quiz_attempts')
         .select(`
-          id,
           student_id,
           score,
           completed_at,
           time_taken_minutes,
-          username,
-          profiles!quiz_attempts_student_id_fkey (
-            id,
-            full_name,
-            email
-          )
+          username
         `)
         .eq('quiz_id', quizId)
         .eq('is_completed', true);
@@ -112,14 +100,8 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
 
       // Format attempts data
       const formattedAttempts = attempts.map(attempt => ({
-        id: attempt.id,
         student_id: attempt.student_id,
-        student: {
-          id: attempt.profiles?.id || attempt.student_id,
-          username: attempt.profiles?.username || null,
-          full_name: attempt.profiles?.full_name || 'Unknown',
-          email: attempt.profiles?.email || 'Unknown'
-        },
+        username: attempt.username,
         score: attempt.score || 0,
         completed_at: attempt.completed_at || '',
         time_taken_minutes: attempt.time_taken_minutes || 0
@@ -229,21 +211,17 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
                 <p className="text-gray-500 text-center py-4">No attempts yet</p>
               ) : (
                 <div className="space-y-4">
-                  {analytics.attempts.map((attempt) => (
-                    <div key={attempt.id} className="flex justify-between items-center p-3 border rounded-lg">
+                  {analytics.attempts.map((attempt, index) => (
+                    <div key={`${attempt.student_id}-${index}`} className="flex justify-between items-center p-3 border rounded-lg">
                        <div>
                          <div className="flex items-center space-x-2">
                            <p className="font-medium">
-                             {attempt.student.username ? `@${attempt.student.username}` : attempt.student.full_name}
+                             {attempt.username ? `@${attempt.username}` : `Student ${attempt.student_id.slice(0, 8)}`}
                            </p>
                            <Badge variant="outline" className="text-xs">
-                             ID: {attempt.student.id.slice(0, 8)}
+                             ID: {attempt.student_id.slice(0, 8)}
                            </Badge>
                          </div>
-                         {attempt.student.username && (
-                           <p className="text-sm text-gray-600">{attempt.student.full_name}</p>
-                         )}
-                         <p className="text-sm text-gray-500">{attempt.student.email}</p>
                          <p className="text-xs text-gray-400">
                            Completed: {new Date(attempt.completed_at).toLocaleDateString()}
                          </p>
