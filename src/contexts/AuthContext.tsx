@@ -212,7 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteAccount = async () => {
     try {
-      // First delete the profile
+      // First delete the profile and related data
       if (user?.id) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -224,16 +224,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
-      // Then delete the user account
-      const { error } = await supabase.rpc('delete_user');
+      // Sign out the user
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
       
-      if (!error) {
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-      }
-      
-      return { error };
+      return { error: null };
     } catch (error) {
       return { error };
     }

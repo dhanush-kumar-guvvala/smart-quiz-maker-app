@@ -262,6 +262,10 @@ export type Database = {
         Args: { "": string } | { "": string }
         Returns: string
       }
+      delete_user: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_quiz_code: {
         Args: Record<PropertyKey, never>
         Returns: string

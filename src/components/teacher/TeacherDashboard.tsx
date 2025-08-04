@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { QuizCreation } from './QuizCreation';
 import { QuizAnalytics } from './QuizAnalytics';
-import { Plus, BookOpen, Users, BarChart3, LogOut } from 'lucide-react';
+import { AccountSettings } from '@/components/shared/AccountSettings';
+import { Plus, BookOpen, Users, BarChart3, LogOut, Settings } from 'lucide-react';
 import { useQuizManagement } from '@/hooks/useQuizManagement';
 
 export const TeacherDashboard = () => {
   const { profile, signOut } = useAuth();
   const { quizzes, loading, fetchQuizzes, deleteQuiz, toggleQuizStatus } = useQuizManagement(profile?.id);
-  const [activeView, setActiveView] = useState<'dashboard' | 'create' | 'analytics'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'create' | 'analytics' | 'settings'>('dashboard');
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,6 +30,30 @@ export const TeacherDashboard = () => {
           fetchQuizzes();
         }}
       />
+    );
+  }
+
+  if (activeView === 'settings') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+                <p className="text-gray-600">Manage your account preferences</p>
+              </div>
+              <Button variant="outline" onClick={() => setActiveView('dashboard')}>
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </header>
+        
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <AccountSettings />
+        </main>
+      </div>
     );
   }
 
@@ -60,6 +85,14 @@ export const TeacherDashboard = () => {
               >
                 <Plus className="h-4 w-4" />
                 <span>Create Quiz</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setActiveView('settings')}
+                className="flex items-center space-x-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
               </Button>
               <Button variant="ghost" onClick={signOut}>
                 <LogOut className="h-4 w-4 mr-2" />

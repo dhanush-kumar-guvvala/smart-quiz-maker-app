@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { QuizTaking } from './QuizTaking';
 import { QuizResults } from './QuizResults';
 import { UsernameSetup } from './UsernameSetup';
-import { BookOpen, Clock, Trophy, LogOut, Search } from 'lucide-react';
+import { AccountSettings } from '@/components/shared/AccountSettings';
+import { BookOpen, Clock, Trophy, LogOut, Search, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Quiz {
@@ -41,7 +42,7 @@ interface QuizAttempt {
 export const StudentDashboard = () => {
   const { profile, signOut } = useAuth();
   const [quizCode, setQuizCode] = useState('');
-  const [activeView, setActiveView] = useState<'dashboard' | 'quiz' | 'results'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'quiz' | 'results' | 'settings'>('dashboard');
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
   const [selectedAttemptId, setSelectedAttemptId] = useState<string | null>(null);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
@@ -235,6 +236,30 @@ export const StudentDashboard = () => {
     );
   }
 
+  if (activeView === 'settings') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+                <p className="text-gray-600">Manage your account preferences</p>
+              </div>
+              <Button variant="outline" onClick={() => setActiveView('dashboard')}>
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </header>
+        
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <AccountSettings />
+        </main>
+      </div>
+    );
+  }
+
   if (activeView === 'results' && selectedAttemptId) {
     return (
       <QuizResults
@@ -261,10 +286,20 @@ export const StudentDashboard = () => {
               <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
               <p className="text-gray-600">Welcome, {profile?.full_name}</p>
             </div>
-            <Button variant="ghost" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setActiveView('settings')}
+                className="flex items-center space-x-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </Button>
+              <Button variant="ghost" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
