@@ -137,7 +137,14 @@ export const QuizTaking: React.FC<QuizTakingProps> = ({ quizId, onBack, onComple
     setSubmitting(true);
 
     try {
-      const startTime = new Date(quiz.created_at).getTime();
+      // Use attempt start time instead of quiz creation time
+      const { data: attemptData } = await supabase
+        .from('quiz_attempts')
+        .select('started_at')
+        .eq('id', attemptId)
+        .single();
+      
+      const startTime = new Date(attemptData?.started_at || new Date()).getTime();
       const endTime = new Date().getTime();
       const timeTakenMinutes = Math.round((endTime - startTime) / (1000 * 60));
 
@@ -196,7 +203,7 @@ export const QuizTaking: React.FC<QuizTakingProps> = ({ quizId, onBack, onComple
 
       toast({
         title: "Quiz Submitted!",
-        description: `You scored ${finalScore}%. Results will be available in 1 hour.`,
+        description: `You scored ${finalScore}%. Results will be available in 60 minutes.`,
       });
 
       onCompleted();

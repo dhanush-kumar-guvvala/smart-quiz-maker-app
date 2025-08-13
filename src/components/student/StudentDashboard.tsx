@@ -286,18 +286,38 @@ export const StudentDashboard = () => {
               <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
               <p className="text-gray-600">Welcome, {profile?.full_name}</p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
                 onClick={() => setActiveView('settings')}
-                className="flex items-center space-x-2"
+                className="hidden sm:flex items-center space-x-2"
               >
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
               </Button>
-              <Button variant="ghost" onClick={signOut}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveView('settings')}
+                className="sm:hidden"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={signOut}
+                className="hidden sm:flex items-center"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={signOut}
+                className="sm:hidden"
+              >
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
