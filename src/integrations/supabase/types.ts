@@ -247,13 +247,70 @@ export type Database = {
             referencedRelation: "questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "student_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "student_quiz_questions"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      student_quiz_questions: {
+        Row: {
+          correct_answer: string | null
+          created_at: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"] | null
+          id: string | null
+          options: Json | null
+          order_index: number | null
+          points: number | null
+          question_text: string | null
+          question_type: Database["public"]["Enums"]["question_type"] | null
+          quiz_id: string | null
+        }
+        Insert: {
+          correct_answer?: never
+          created_at?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          id?: string | null
+          options?: Json | null
+          order_index?: number | null
+          points?: number | null
+          question_text?: string | null
+          question_type?: Database["public"]["Enums"]["question_type"] | null
+          quiz_id?: string | null
+        }
+        Update: {
+          correct_answer?: never
+          created_at?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
+          id?: string | null
+          options?: Json | null
+          order_index?: number | null
+          points?: number | null
+          question_text?: string | null
+          question_type?: Database["public"]["Enums"]["question_type"] | null
+          quiz_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      can_student_see_correct_answers: {
+        Args: { question_quiz_id: string }
+        Returns: boolean
+      }
       convert_quizzes_to_ist: {
         Args: Record<PropertyKey, never>
         Returns: undefined

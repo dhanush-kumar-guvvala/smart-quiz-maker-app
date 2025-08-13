@@ -62,9 +62,9 @@ export const QuizTaking: React.FC<QuizTakingProps> = ({ quizId, onBack, onComple
 
       if (quizError) throw quizError;
 
-      // Fetch questions
+      // Fetch questions using the student view (without correct answers during quiz taking)
       const { data: questionsData, error: questionsError } = await supabase
-        .from('questions')
+        .from('student_quiz_questions')
         .select('id, question_text, question_type, options, order_index')
         .eq('quiz_id', quizId)
         .order('order_index');
