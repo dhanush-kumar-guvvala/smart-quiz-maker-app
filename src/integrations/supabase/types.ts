@@ -247,17 +247,8 @@ export type Database = {
             referencedRelation: "questions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "student_answers_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "student_quiz_questions"
-            referencedColumns: ["id"]
-          },
         ]
       }
-    }
-    Views: {
       student_quiz_questions: {
         Row: {
           correct_answer: string | null
@@ -272,7 +263,7 @@ export type Database = {
           quiz_id: string | null
         }
         Insert: {
-          correct_answer?: never
+          correct_answer?: string | null
           created_at?: string | null
           difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
           id?: string | null
@@ -284,7 +275,7 @@ export type Database = {
           quiz_id?: string | null
         }
         Update: {
-          correct_answer?: never
+          correct_answer?: string | null
           created_at?: string | null
           difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
           id?: string | null
@@ -295,16 +286,11 @@ export type Database = {
           question_type?: Database["public"]["Enums"]["question_type"] | null
           quiz_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "questions_quiz_id_fkey"
-            columns: ["quiz_id"]
-            isOneToOne: false
-            referencedRelation: "quizzes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
+    }
+    Views: {
+      [_ in never]: never
     }
     Functions: {
       can_student_see_correct_answers: {
@@ -326,6 +312,10 @@ export type Database = {
       generate_quiz_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      populate_student_quiz_questions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_quiz_attempts_username: {
         Args: Record<PropertyKey, never>
