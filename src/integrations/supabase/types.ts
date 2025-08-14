@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -249,54 +249,11 @@ export type Database = {
           },
         ]
       }
-      student_quiz_questions: {
-        Row: {
-          correct_answer: string | null
-          created_at: string | null
-          difficulty: Database["public"]["Enums"]["difficulty_level"] | null
-          id: string | null
-          options: Json | null
-          order_index: number | null
-          points: number | null
-          question_text: string | null
-          question_type: Database["public"]["Enums"]["question_type"] | null
-          quiz_id: string | null
-        }
-        Insert: {
-          correct_answer?: string | null
-          created_at?: string | null
-          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
-          id?: string | null
-          options?: Json | null
-          order_index?: number | null
-          points?: number | null
-          question_text?: string | null
-          question_type?: Database["public"]["Enums"]["question_type"] | null
-          quiz_id?: string | null
-        }
-        Update: {
-          correct_answer?: string | null
-          created_at?: string | null
-          difficulty?: Database["public"]["Enums"]["difficulty_level"] | null
-          id?: string | null
-          options?: Json | null
-          order_index?: number | null
-          points?: number | null
-          question_text?: string | null
-          question_type?: Database["public"]["Enums"]["question_type"] | null
-          quiz_id?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      can_student_see_correct_answers: {
-        Args: { question_quiz_id: string }
-        Returns: boolean
-      }
       convert_quizzes_to_ist: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -312,10 +269,6 @@ export type Database = {
       generate_quiz_code: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      populate_student_quiz_questions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       update_quiz_attempts_username: {
         Args: Record<PropertyKey, never>

@@ -62,9 +62,9 @@ export const QuizTaking: React.FC<QuizTakingProps> = ({ quizId, onBack, onComple
 
       if (quizError) throw quizError;
 
-      // Fetch questions using the student view (without correct answers during quiz taking)
+      // Fetch questions
       const { data: questionsData, error: questionsError } = await supabase
-        .from('student_quiz_questions')
+        .from('questions')
         .select('id, question_text, question_type, options, order_index')
         .eq('quiz_id', quizId)
         .order('order_index');
@@ -137,14 +137,7 @@ export const QuizTaking: React.FC<QuizTakingProps> = ({ quizId, onBack, onComple
     setSubmitting(true);
 
     try {
-      // Use attempt start time instead of quiz creation time
-      const { data: attemptData } = await supabase
-        .from('quiz_attempts')
-        .select('started_at')
-        .eq('id', attemptId)
-        .single();
-      
-      const startTime = new Date(attemptData?.started_at || new Date()).getTime();
+      const startTime = new Date(quiz.created_at).getTime();
       const endTime = new Date().getTime();
       const timeTakenMinutes = Math.round((endTime - startTime) / (1000 * 60));
 
@@ -203,7 +196,7 @@ export const QuizTaking: React.FC<QuizTakingProps> = ({ quizId, onBack, onComple
 
       toast({
         title: "Quiz Submitted!",
-        description: `You scored ${finalScore}%. Results will be available in 60 minutes.`,
+        description: `You scored ${finalScore}%. Results will be available in 1 hour.`,
       });
 
       onCompleted();
