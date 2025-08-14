@@ -195,7 +195,7 @@ Make sure the questions are educational, accurate, and appropriate for the topic
         question_type: q.question_type,
         difficulty: q.difficulty,
         correct_answer: q.correct_answer,
-        options: q.options ? JSON.stringify(q.options) : null,
+        options: q.options || null, // Keep as object for jsonb column
         points: q.points,
         order_index: index,
       }));
