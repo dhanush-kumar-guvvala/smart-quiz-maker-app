@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Wand2, Upload, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Wand2, Upload, Plus, Minus, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { generateQuizPDF } from '@/utils/pdfGenerator';
 
 interface QuestionConfig {
   type: 'multiple_choice' | 'theory' | 'fill_in_the_blank' | 'true_false';
@@ -40,6 +42,7 @@ export const QuizCreation: React.FC<QuizCreationProps> = ({ onBack, onQuizCreate
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [topic, setTopic] = useState('');
+  const [extraInstructions, setExtraInstructions] = useState('');
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [startTime, setStartTime] = useState('');
@@ -52,6 +55,7 @@ export const QuizCreation: React.FC<QuizCreationProps> = ({ onBack, onQuizCreate
   
   // Step 3 - Generated Questions
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
+  const [savedQuizData, setSavedQuizData] = useState<{ title: string; quiz_code: string } | null>(null);
 
   const addQuestionConfig = () => {
     setQuestionConfigs([...questionConfigs, { type: 'multiple_choice', difficulty: 'medium', count: 1 }]);
@@ -73,16 +77,26 @@ export const QuizCreation: React.FC<QuizCreationProps> = ({ onBack, onQuizCreate
     try {
       // Create the prompt for Gemini AI
       const totalQuestions = questionConfigs.reduce((sum, config) => sum + config.count, 0);
-      const prompt = `Generate ${totalQuestions} quiz questions about "${topic}".
+      let prompt = `Generate ${totalQuestions} quiz questions about "${topic}".
 
 Question distribution:
 ${questionConfigs.map(config => 
   `${config.count} ${config.difficulty} ${config.type.replace('_', ' ')} questions`
-).join('\n')}
+).join('\n')}`;
+
+      // Add extra instructions if provided
+      if (extraInstructions.trim()) {
+        prompt += `\n\nAdditional Context and Instructions:
+${extraInstructions}
+
+Please consider these additional instructions when generating the questions.`;
+      }
+
+      prompt += `
 
 For each question, provide:
 1. Question text
-2. Question type
+2. Question type  
 3. Difficulty level
 4. Correct answer
 5. For multiple choice: provide 4 options (including the correct one)
@@ -156,6 +170,34 @@ Make sure the questions are educational, accurate, and appropriate for the topic
     setGeneratedQuestions(generatedQuestions.filter((_, i) => i !== index));
   };
 
+  const downloadQuizPDF = () => {
+    if (!savedQuizData) return;
+    
+    try {
+      generateQuizPDF({
+        title: savedQuizData.title,
+        quizCode: savedQuizData.quiz_code,
+        topic,
+        description,
+        questions: generatedQuestions,
+        totalQuestions: generatedQuestions.length,
+        duration: durationMinutes
+      });
+      
+      toast({
+        title: "PDF Downloaded",
+        description: "Quiz questions have been downloaded as PDF",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const saveQuiz = async () => {
     if (!user) {
       toast({
@@ -206,12 +248,19 @@ Make sure the questions are educational, accurate, and appropriate for the topic
 
       if (questionsError) throw questionsError;
 
+      // Store quiz data for PDF download
+      setSavedQuizData({
+        title: quiz.title,
+        quiz_code: quiz.quiz_code
+      });
+
       toast({
         title: "Quiz Created!",
         description: `Quiz "${title}" has been created successfully with code ${quiz.quiz_code}`,
       });
 
-      onQuizCreated();
+      // Move to a success step instead of immediately going back
+      setStep(4);
     } catch (error) {
       console.error('Error saving quiz:', error);
       toast({
@@ -280,6 +329,20 @@ Make sure the questions are educational, accurate, and appropriate for the topic
                   placeholder="e.g., World War II, Photosynthesis, Algebra"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="extraInstructions">Extra Instructions for AI (Optional)</Label>
+                <Textarea
+                  id="extraInstructions"
+                  value={extraInstructions}
+                  onChange={(e) => setExtraInstructions(e.target.value)}
+                  placeholder="Provide additional context like textbook references, specific scenarios, learning objectives, or any special requirements for question generation..."
+                  rows={4}
+                />
+                <p className="text-sm text-gray-500">
+                  Help the AI generate better questions by providing context like textbook chapters, specific scenarios, difficulty preferences, or learning objectives.
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -522,6 +585,40 @@ Make sure the questions are educational, accurate, and appropriate for the topic
                 <Button onClick={saveQuiz} disabled={loading}>
                   {loading ? "Saving..." : "Save Quiz"}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 4: Success with PDF Download */}
+        {step === 4 && savedQuizData && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Quiz Created Successfully!</CardTitle>
+              <CardDescription>
+                Your quiz has been created and is ready for students
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-green-800 mb-2">
+                    Quiz Code: {savedQuizData.quiz_code}
+                  </h3>
+                  <p className="text-green-700">
+                    Share this code with your students to let them access the quiz
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button onClick={downloadQuizPDF} variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Questions as PDF
+                  </Button>
+                  <Button onClick={onQuizCreated}>
+                    Go to Dashboard
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
