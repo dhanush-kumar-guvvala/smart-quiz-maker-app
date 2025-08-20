@@ -4,8 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, Clock, Trophy, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Users, Clock, Trophy, TrendingUp, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateQuizPDF } from '@/utils/pdfGenerator';
 
 interface QuizAnalyticsProps {
   quizId: string;
@@ -18,6 +19,8 @@ interface AnalyticsData {
     quiz_code: string;
     total_questions: number;
     duration_minutes: number;
+    topic?: string;
+    description?: string;
   };
   attempts: Array<{
     student_id: string;
@@ -31,6 +34,14 @@ interface AnalyticsData {
     correct_count: number;
     total_attempts: number;
     accuracy: number;
+  }>;
+  questions: Array<{
+    question_text: string;
+    question_type: 'multiple_choice' | 'theory' | 'fill_in_the_blank' | 'true_false';
+    difficulty: 'easy' | 'medium' | 'hard';
+    correct_answer: string;
+    options?: string[];
+    points: number;
   }>;
 }
 
@@ -47,7 +58,7 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
       // Fetch quiz details
       const { data: quiz, error: quizError } = await supabase
         .from('quizzes')
-        .select('title, quiz_code, total_questions, duration_minutes')
+        .select('title, quiz_code, total_questions, duration_minutes, topic, description')
         .eq('id', quizId)
         .single();
 
@@ -68,12 +79,17 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
 
       if (attemptsError) throw attemptsError;
 
-      // Fetch question-wise statistics
+      // Fetch question-wise statistics and full question data
       const { data: questions, error: questionsError } = await supabase
         .from('questions')
         .select(`
           id,
           question_text,
+          question_type,
+          difficulty,
+          correct_answer,
+          options,
+          points,
           student_answers (
             is_correct,
             attempt_id
@@ -107,10 +123,21 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
         time_taken_minutes: attempt.time_taken_minutes || 0
       }));
 
+      // Format questions for PDF generation
+      const formattedQuestions = questions.map(question => ({
+        question_text: question.question_text,
+        question_type: question.question_type as 'multiple_choice' | 'theory' | 'fill_in_the_blank' | 'true_false',
+        difficulty: question.difficulty as 'easy' | 'medium' | 'hard',
+        correct_answer: question.correct_answer,
+        options: Array.isArray(question.options) ? question.options.map(opt => String(opt)) : undefined,
+        points: question.points || 1
+      }));
+
       setAnalytics({
         quiz,
         attempts: formattedAttempts,
-        questionStats
+        questionStats,
+        questions: formattedQuestions
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -148,19 +175,51 @@ export const QuizAnalytics: React.FC<QuizAnalyticsProps> = ({ quizId, onBack }) 
     ? Math.round(analytics.attempts.reduce((sum, attempt) => sum + attempt.time_taken_minutes, 0) / analytics.attempts.length)
     : 0;
 
+  const handleDownloadPDF = () => {
+    try {
+      generateQuizPDF({
+        title: analytics.quiz.title,
+        quizCode: analytics.quiz.quiz_code,
+        topic: analytics.quiz.topic || '',
+        description: analytics.quiz.description || '',
+        questions: analytics.questions,
+        totalQuestions: analytics.quiz.total_questions,
+        duration: analytics.quiz.duration_minutes
+      });
+      
+      toast({
+        title: "Success",
+        description: "PDF generation started. A new window will open for printing/saving.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={onBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{analytics.quiz.title}</h1>
-              <p className="text-gray-600">Quiz Code: {analytics.quiz.quiz_code}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" onClick={onBack}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{analytics.quiz.title}</h1>
+                <p className="text-gray-600">Quiz Code: {analytics.quiz.quiz_code}</p>
+              </div>
             </div>
+            <Button onClick={handleDownloadPDF} className="flex items-center space-x-2">
+              <Download className="h-4 w-4" />
+              <span>Download PDF</span>
+            </Button>
           </div>
         </div>
       </header>
